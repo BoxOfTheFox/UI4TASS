@@ -6,21 +6,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import kotlinx.coroutines.MainScope
 import kotlin.random.Random
 
-val path = System.getProperty("user.dir")
-val target = "$path/src/jvmMain/resources/raw/sofifa_processed.csv"
-val data = readCsv(target)
+private val scope = MainScope()
+private val viewModel = MainViewModel()
 
 @Composable
 @Preview
@@ -44,11 +42,12 @@ fun App() {
 
 @Composable
 fun MainScreen(onClick: (Navigation, Row) -> Unit) {
+    val sofifaState by viewModel.sofifaState.collectAsState()
     LazyColumn(
         modifier = Modifier.padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(data) {
+        items(sofifaState.toRows()) {
             MainCard(modifier = Modifier.fillMaxWidth(), row=it) { onClick(Navigation.Detail, it) }
         }
     }
@@ -56,12 +55,15 @@ fun MainScreen(onClick: (Navigation, Row) -> Unit) {
 
 @Composable
 fun DetailScreen(row: Row, onClick: (Navigation, Row?) -> Unit) {
+    val testState by viewModel.testState.collectAsState()
+    val randomSofifaRows = viewModel.sofifaState.value.toRows().shuffled().take(Random.nextInt(7) + 3)
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Row(modifier = Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Button(
                     modifier = Modifier.size(50.dp),
-                    onClick = { onClick(Navigation.Main, null) },
+                    onClick = { viewModel.clearTest(); onClick(Navigation.Main, null) },
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary),
                     contentPadding = PaddingValues(0.dp)
@@ -71,16 +73,28 @@ fun DetailScreen(row: Row, onClick: (Navigation, Row?) -> Unit) {
             }
             Spacer(modifier = Modifier.weight(1f))
             MainCard(modifier = Modifier.weight(3f), row = row) {}
-            Spacer(modifier = Modifier.weight(2f))
+            Spacer(modifier = Modifier.weight(1f))
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Button(
+                    modifier = Modifier.size(50.dp),
+                    onClick = { viewModel.test("file.py", "u", "a") },
+                    shape = CircleShape,
+                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.Info, "Home")
+                }
+            }
         }
 
         LazyColumn(modifier = Modifier.padding(start = 32.dp, top = 16.dp, end = 32.dp)) {
-            items(data.shuffled().take(Random.nextInt(7) + 3)) {
+            items(randomSofifaRows) {
                 Row {
                     MainCard(modifier = Modifier.weight(2f).padding(end = 24.dp), row = it) {
+                        viewModel.clearTest()
                         onClick(Navigation.Detail, it)
                     }
-                    Text(modifier = Modifier.weight(1f).padding(8.dp), text = "No fajny był")
+                    Text(modifier = Modifier.weight(1f).padding(8.dp), text = testState)
                 }
             }
         }
@@ -88,7 +102,7 @@ fun DetailScreen(row: Row, onClick: (Navigation, Row?) -> Unit) {
 }
 
 fun main() = application {
-    Window(onCloseRequest = ::exitApplication) {
+    Window(onCloseRequest = { viewModel.onDestroy(); exitApplication() }) {
         App()
     }
 }
