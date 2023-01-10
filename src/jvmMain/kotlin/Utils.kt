@@ -8,9 +8,10 @@ data class Atomowki(
     val bajka: List<String>,
     val brawurka: List<Number>,
 )
-suspend fun <T>executePython(commands: List<String>, clazz: Class<T>, filePath: String) =
+
+suspend fun <T> executePython(commands: List<String>, clazz: Class<T>, filePath: String) =
     withContext(Dispatchers.IO) {
-        ProcessBuilder(listOf("python3", *commands.toTypedArray()))
+        ProcessBuilder(listOf("python", *commands.toTypedArray()))
             .apply { directory(File(filePath)) }
             .start().inputStream.reader().readText().let {
                 Gson().fromJson(it, clazz)

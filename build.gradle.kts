@@ -28,6 +28,7 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation("com.google.code.gson:gson:2.10")
+                implementation("com.squareup.okhttp3:okhttp:3.8.1")
             }
         }
         val jvmTest by getting

@@ -15,7 +15,7 @@ fun MainCard(
     onClick: () -> Unit
 ) {
     Card(
-        elevation = 1.dp,
+        elevation = 2.dp,
         modifier = modifier
             .defaultMinSize(minHeight = 80.dp),
         onClick = { onClick() },
