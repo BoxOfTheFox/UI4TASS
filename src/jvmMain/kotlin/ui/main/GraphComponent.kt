@@ -1,18 +1,10 @@
-package ui
+package ui.main
 
-import MainViewModel
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.onDrag
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -30,12 +22,18 @@ import domain.GraphState
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun Graph(viewModel: MainViewModel) {
+fun GraphComponent(
+    showEdgeInfo: Boolean,
+    showNodeInfo: Boolean,
+    sliderPosition: Float,
+    profiles: List<Pair<String, String>>,
+    graphState: GraphState?,
+    onClick: (String) -> Unit
+) {
     var centerOffset by remember { mutableStateOf(Offset(0f, 0f)) }
     var scrollOffset by remember { mutableStateOf(1f) }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
 
-    val graphState by viewModel.graphState.collectAsState()
 
     Column {
         Box(modifier = Modifier.scale(scrollOffset).padding(40.dp)
@@ -43,9 +41,13 @@ fun Graph(viewModel: MainViewModel) {
             .onPointerEvent(PointerEventType.Scroll) { scrollOffset -= it.changes.first().scrollDelta.y / 50 }
         ) {
             graphState?.let { graphResponse ->
-                graphResponse.nodes.forEach { NodeInfo(it, viewModel.profiles.value ,canvasSize, centerOffset) }
-                graphResponse.edges.forEach { EdgeInfo(it, canvasSize, centerOffset) }
-                GraphCanvas(graphResponse, { canvasSize = it }, centerOffset)
+                if (showNodeInfo)
+                    graphResponse.nodes.forEach {
+                        NodeInfo(it, profiles, canvasSize, centerOffset, onClick)
+                    }
+                if (showEdgeInfo)
+                    graphResponse.edges.forEach { EdgeInfo(it, canvasSize, centerOffset) }
+                GraphCanvas(graphResponse, { canvasSize = it }, centerOffset, sliderPosition)
             }
         }
     }
@@ -66,31 +68,36 @@ fun EdgeInfo(edge: Edge, canvasSize: Size, centerOffset: Offset) {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun NodeInfo(node: Map.Entry<String, List<Float>>, profiles: List<Pair<String, String>>, canvasSize: Size, centerOffset: Offset){
-    var nodeShowMore by remember { mutableStateOf(false) }
-    Surface(modifier = Modifier.offset(
-        LocalDensity.current.run { (canvasSize.width * node.value[0] + centerOffset.x).toDp() },
-        LocalDensity.current.run { (canvasSize.height * node.value[1] + centerOffset.y).toDp() }
-    ).wrapContentSize().zIndex(if (nodeShowMore) 0.9f else 0.5f),
+fun NodeInfo(
+    node: Map.Entry<String, List<Float>>,
+    profiles: List<Pair<String, String>>,
+    canvasSize: Size,
+    centerOffset: Offset,
+    onClick: (String) -> Unit
+) {
+    var elevate by remember { mutableStateOf(false) }
+    Card(
+        modifier = Modifier.offset(
+            LocalDensity.current.run { (canvasSize.width * node.value[0] + centerOffset.x).toDp() },
+            LocalDensity.current.run { (canvasSize.height * node.value[1] + centerOffset.y).toDp() }
+        ).wrapContentSize().zIndex(if (elevate) 0.9f else 0.5f)
+            .clickable { onClick(profiles.find { node.key == it.second }?.first!!) }
+            .onPointerEvent(PointerEventType.Enter) { elevate = true }
+            .onPointerEvent(PointerEventType.Exit) { elevate = false },
         elevation = 2.dp,
         shape = RoundedCornerShape(4.dp)
     ) {
-        Row {
-            IconButton(onClick = { nodeShowMore = !nodeShowMore }) { Icon(imageVector = Icons.Default.Info, "Home") }
-            Column(modifier = Modifier.padding(top = 12.dp, end = 12.dp, bottom = 12.dp)) {
-                Text(text = "Imię: ${profiles.find { node.key == it.second }?.first}")
-//                if (nodeShowMore) {
-//                    Text(text = "Klub: ${node.row["Club"]}")
-//                    Text(text = "Wzrost: ${node.row["Height"]}")
-//                }
-            }
-        }
+        Text(
+            modifier = Modifier.padding(8.dp),
+            text = "Imię: ${profiles.find { node.key == it.second }?.first}"
+        )
     }
 }
 
 @Composable
-fun GraphCanvas(graphState: GraphState, setCanvasSize: (Size) -> Unit, centerOffset: Offset) {
+fun GraphCanvas(graphState: GraphState, setCanvasSize: (Size) -> Unit, centerOffset: Offset, sliderPosition: Float) {
     Canvas(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
         setCanvasSize(size)
         graphState.edges.forEach {
@@ -104,7 +111,7 @@ fun GraphCanvas(graphState: GraphState, setCanvasSize: (Size) -> Unit, centerOff
                     this.size.width * it.nodes.second.x + centerOffset.x,
                     this.size.height * it.nodes.second.y + centerOffset.y
                 ),
-                strokeWidth = it.weight
+                strokeWidth = it.weight*(1+sliderPosition*10)
             )
         }
 

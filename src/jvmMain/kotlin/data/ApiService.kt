@@ -14,6 +14,14 @@ interface ApiService {
 
     suspend fun getGraph(graphRequest: GraphRequest): GraphResponse
 
+    suspend fun getProfile(name: String): Profile
+
+    suspend fun getSofifaSimilar(profileName: String, number: Int): SimilarityResponse
+
+    suspend fun getInstaSimilar(profileName: String, number: Int): SimilarityResponse
+
+    suspend fun getComments(profileName: String): CommentsResponse
+
     companion object {
         fun create(): ApiService {
             return ApiServiceImpl(

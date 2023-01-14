@@ -28,7 +28,6 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
-                implementation("com.google.code.gson:gson:2.10")
                 implementation("io.ktor:ktor-client-core:2.2.2")
                 implementation("io.ktor:ktor-client-cio:2.2.2")
                 implementation("io.ktor:ktor-client-serialization:2.2.2")
