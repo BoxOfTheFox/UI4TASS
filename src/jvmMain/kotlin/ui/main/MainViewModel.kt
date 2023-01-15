@@ -1,8 +1,8 @@
 package ui.main
 
 import data.*
-import domain.GraphState
-import domain.toGraphState
+import domain.Graphs
+import domain.toGraphs
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -20,11 +20,11 @@ class MainViewModel(private val api: ApiService) {
     private val _changingDate = MutableStateFlow(false)
     val changingDate = _changingDate.asStateFlow()
 
-    private val _graphState = MutableStateFlow<GraphState?>(null)
+    private val _graphState = MutableStateFlow<Graphs?>(null)
     val graphState = _graphState.asStateFlow()
     fun buildGraph(graphRequest: GraphRequest) = scope.launch {
         _graphState.emit(null)
-        _graphState.emit(api.getGraph(graphRequest).toGraphState(graphRequest.graphType))
+        _graphState.emit(api.getGraph(graphRequest).toGraphs())
     }
 
     fun setNewDate(startDate: String, endDate: String) = scope.launch {

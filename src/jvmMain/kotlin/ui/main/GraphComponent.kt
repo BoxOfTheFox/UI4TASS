@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.platform.LocalDensity
@@ -19,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import domain.Edge
 import domain.GraphState
+import domain.Graphs
+import domain.Node
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -26,8 +29,9 @@ fun GraphComponent(
     showEdgeInfo: Boolean,
     showNodeInfo: Boolean,
     sliderPosition: Float,
+    filterSliderPosition: Float,
     profiles: List<Pair<String, String>>,
-    graphState: GraphState?,
+    graphs: Graphs?,
     onClick: (String) -> Unit
 ) {
     var centerOffset by remember { mutableStateOf(Offset(0f, 0f)) }
@@ -40,14 +44,18 @@ fun GraphComponent(
             .onDrag { centerOffset += it }
             .onPointerEvent(PointerEventType.Scroll) { scrollOffset -= it.changes.first().scrollDelta.y / 50 }
         ) {
-            graphState?.let { graphResponse ->
-                if (showNodeInfo)
-                    graphResponse.nodes.forEach {
-                        NodeInfo(it, profiles, canvasSize, centerOffset, onClick)
-                    }
-                if (showEdgeInfo)
-                    graphResponse.edges.forEach { EdgeInfo(it, canvasSize, centerOffset) }
-                GraphCanvas(graphResponse, { canvasSize = it }, centerOffset, sliderPosition)
+            graphs?.let { graphs ->
+                if (showNodeInfo) {
+                    graphs.insta.nodes.forEach { NodeInfo(it, profiles, canvasSize, centerOffset, onClick) }
+                    graphs.sofifa.nodes.forEach { NodeInfo(it, profiles, canvasSize, centerOffset, onClick) }
+                    graphs.common.nodes.forEach { NodeInfo(it, profiles, canvasSize, centerOffset, onClick) }
+                }
+                if (showEdgeInfo) {
+                    graphs.insta.edges.forEach { EdgeInfo(it, canvasSize, centerOffset) }
+                    graphs.sofifa.edges.forEach { EdgeInfo(it, canvasSize, centerOffset) }
+                    graphs.common.edges.forEach { EdgeInfo(it, canvasSize, centerOffset) }
+                }
+                GraphCanvas(graphs, { canvasSize = it }, centerOffset, sliderPosition, filterSliderPosition)
             }
         }
     }
@@ -97,33 +105,47 @@ fun NodeInfo(
 }
 
 @Composable
-fun GraphCanvas(graphState: GraphState, setCanvasSize: (Size) -> Unit, centerOffset: Offset, sliderPosition: Float) {
+fun GraphCanvas(graphs: Graphs, setCanvasSize: (Size) -> Unit, centerOffset: Offset, sliderPosition: Float, filterSliderPosition: Float) {
     Canvas(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
         setCanvasSize(size)
-        graphState.edges.forEach {
-            drawLine(
-                color = Color.Red,
-                start = Offset(
-                    this.size.width * it.nodes.first.x + centerOffset.x,
-                    this.size.height * it.nodes.first.y + centerOffset.y
-                ),
-                end = Offset(
-                    this.size.width * it.nodes.second.x + centerOffset.x,
-                    this.size.height * it.nodes.second.y + centerOffset.y
-                ),
-                strokeWidth = it.weight*(1+sliderPosition*10)
-            )
-        }
+        graphs.insta.edges
+            .filterNot { it in graphs.common.edges }
+            .filter { it.weight > filterSliderPosition }
+            .forEach { drawEdge(it, centerOffset, sliderPosition, Color.Blue) }
+        graphs.sofifa.edges
+            .filterNot { it in graphs.common.edges }
+            .filter { it.weight > filterSliderPosition }
+            .forEach { drawEdge(it, centerOffset, sliderPosition, Color.Green) }
+        graphs.common.edges.forEach { drawEdge(it, centerOffset, sliderPosition, Color.Gray) }
 
-        graphState.nodes.forEach {
-            drawCircle(
-                color = Color.Red,
-                radius = 13f,
-                center = Offset(
-                    this.size.width * it.value[0] + centerOffset.x,
-                    this.size.height * it.value[1] + centerOffset.y
-                )
-            )
-        }
+        graphs.insta.nodes.filterNot { it in graphs.common.nodes.entries }.forEach { drawNode(it, centerOffset, Color.Blue) }
+        graphs.sofifa.nodes.filterNot { it in graphs.common.nodes.entries }.forEach { drawNode(it, centerOffset, Color.Green) }
+        graphs.common.nodes.forEach { drawNode(it, centerOffset, Color.Gray) }
     }
+}
+
+fun DrawScope.drawEdge(edge: Edge, centerOffset: Offset, sliderPosition: Float, color: Color) {
+    drawLine(
+        color = color,
+        start = Offset(
+            this.size.width * edge.nodes.first.x + centerOffset.x,
+            this.size.height * edge.nodes.first.y + centerOffset.y
+        ),
+        end = Offset(
+            this.size.width * edge.nodes.second.x + centerOffset.x,
+            this.size.height * edge.nodes.second.y + centerOffset.y
+        ),
+        strokeWidth = edge.weight*(1+sliderPosition*10)
+    )
+}
+
+fun DrawScope.drawNode(node: Map.Entry<String, List<Float>>, centerOffset: Offset, color: Color) {
+    drawCircle(
+        color = color,
+        radius = 13f,
+        center = Offset(
+            this.size.width * node.value[0] + centerOffset.x,
+            this.size.height * node.value[1] + centerOffset.y
+        )
+    )
 }

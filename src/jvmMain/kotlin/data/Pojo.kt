@@ -12,21 +12,22 @@ data class GraphRequest(
 @Serializable
 data class GraphResponse(
     val edges: Edges,
-    val nodes: Nodes
+    val nodes: Nodes,
+    val weights: List<Float> = listOf()
 )
 
 @Serializable
 data class Edges(
-    val common: List<List<String>>? = null,
-    val instagram_only: List<List<String>>? = null,
-    val sofifa_only: List<List<String>>? = null
+    val common: List<List<String>> = listOf(),
+    val instagram_only: List<List<String>> = listOf(),
+    val sofifa_only: List<List<String>> = listOf()
 )
 
 @Serializable
 data class Nodes(
-    val common: List<Map<String,List<Float>>>? = null,
-    val instagram_only: List<Map<String,List<Float>>>? = null,
-    val sofifa_only: List<Map<String,List<Float>>>? = null
+    val common: List<Map<String,List<Float>>> = listOf(),
+    val instagram_only: List<Map<String,List<Float>>> = listOf(),
+    val sofifa_only: List<Map<String,List<Float>>> = listOf()
 )
 
 @Serializable

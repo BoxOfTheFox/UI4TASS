@@ -16,7 +16,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.zIndex
-import domain.GraphState
+import domain.Graphs
 import ui.ScrollableLazyRow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -34,8 +34,10 @@ fun SearchComponent(
     setNodeChecked: (Boolean) -> Unit,
     sliderPosition: Float,
     setSliderPosition: (Float) -> Unit,
+    filterSliderPosition: Float,
+    setFilterSliderPosition: (Float) -> Unit,
     profiles: List<Pair<String, String>>,
-    graphState: GraphState?,
+    graphs: Graphs?,
     isChangingDate: Boolean,
     onNewTimeClick: (String, String) -> Unit,
     onClick: (List<Pair<String, String>>, GraphOptionsEnum) -> Unit
@@ -46,7 +48,7 @@ fun SearchComponent(
     var settingsVisible by remember { mutableStateOf(true) }
     val graphOptions = GraphOptionsEnum.values()
     var graphSelection by remember { mutableStateOf(GraphOptionsEnum.Instagram) }
-    var startDate by remember { mutableStateOf("2020.1.1") }
+    var startDate by remember { mutableStateOf("2000.11.1") }
     var endDate by remember { mutableStateOf(LocalDate.now().format(formatter)) }
 
     Row(modifier = Modifier.padding(16.dp).zIndex(2f)) {
@@ -122,7 +124,7 @@ fun SearchComponent(
                                     graphOptions
                                 )
                             }
-                            if (graphState != null) {
+                            if (graphs != null) {
                                 Column {
                                     Row(
                                         modifier = Modifier.padding(top = 4.dp),
@@ -144,12 +146,17 @@ fun SearchComponent(
                                         Text(modifier = Modifier.padding(end = 4.dp), text = "Grubość krawędzi")
                                         Slider(value = sliderPosition, onValueChange = { setSliderPosition(it) })
                                     }
+
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(modifier = Modifier.padding(end = 4.dp), text = "Filtr krawędzi")
+                                        Slider(value = filterSliderPosition, onValueChange = { setFilterSliderPosition(it) })
+                                    }
                                 }
                             }
                         }
                     }
                 }
-                if (graphState == null && !isChangingDate)
+                if (graphs == null && !isChangingDate)
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
         }

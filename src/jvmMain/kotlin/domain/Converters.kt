@@ -1,39 +1,26 @@
 package domain
 
-import data.Edges
 import data.GraphResponse
-import data.Nodes
-import ui.main.GraphOptionsEnum
 
-fun GraphResponse.toGraphState(optionsEnum: GraphOptionsEnum): GraphState {
-    val _nodes = nodes.toGraphStateNode(optionsEnum)!!.associate {
-        it.keys.first() to it.values.first().map { (it + 1) / 2 }
-    }
-    return GraphState(
-        _nodes,
-        edges.toGraphStateEdge(optionsEnum)!!.map {
-            Edge(
-                1f,
-                Node(
-                    _nodes[it[0]]!![0],
-                    _nodes[it[0]]!![1]
-                ) to Node(
-                    _nodes[it[1]]!![0],
-                    _nodes[it[1]]!![1]
-                )
-            )
-        }
+fun GraphResponse.toGraphs(): Graphs {
+    val instaNodes = nodes.instagram_only.fixNodes()
+    val sofifaNodes = nodes.sofifa_only.fixNodes()
+    val commonNodes = nodes.common.fixNodes()
+
+    return Graphs(
+        insta = GraphState(instaNodes, edges.instagram_only.zip(weights.ifEmpty { List(edges.instagram_only.size) { 1f } }).toEdge(instaNodes)),
+        sofifa = GraphState(sofifaNodes, edges.sofifa_only.zip(weights.ifEmpty { List(edges.sofifa_only.size) { 1f } }).toEdge(sofifaNodes)),
+        common = GraphState(commonNodes, edges.common.zip(List(edges.common.size) {1f}).toEdge(commonNodes)),
     )
 }
 
-fun Nodes.toGraphStateNode(optionsEnum: GraphOptionsEnum) = when(optionsEnum) {
-    GraphOptionsEnum.Instagram -> instagram_only
-    GraphOptionsEnum.Sofifa -> sofifa_only
-    GraphOptionsEnum.Wszystko -> common
+private fun List<Pair<List<String>, Float>>.toEdge(nodes: Map<String, List<Float>>) = map {
+    Edge(
+        it.second,
+        Node(nodes[it.first[0]]!![0], nodes[it.first[0]]!![1]) to Node(nodes[it.first[1]]!![0], nodes[it.first[1]]!![1])
+    )
 }
 
-fun Edges.toGraphStateEdge(optionsEnum: GraphOptionsEnum) = when(optionsEnum) {
-    GraphOptionsEnum.Instagram -> instagram_only
-    GraphOptionsEnum.Sofifa -> sofifa_only
-    GraphOptionsEnum.Wszystko -> common
+private fun List<Map<String, List<Float>>>.fixNodes() = associate {
+    it.keys.first() to it.values.first().map { (it + 1) / 2 }
 }

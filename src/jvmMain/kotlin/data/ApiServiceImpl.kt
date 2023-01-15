@@ -62,7 +62,7 @@ fun main() {
             }
         }
 
-        val response: HttpResponse = client.post("http://127.0.0.1:5000/graph/instagram") {
+        val response: HttpResponse = client.post(ApiRoutes.Graph.SOFIFA) {
             contentType(ContentType.Application.Json)
             setBody(
                 GraphRequest(
@@ -75,8 +75,8 @@ fun main() {
                 )
             )
         }
-//        println(response.body<GraphResponse>())
-        println(response.bodyAsText())
+        println(response.body<GraphResponse>())
+//        println(response.bodyAsText())
 
 //        val profile = client.get("${ApiRoutes.GRAPH}").body<GraphResponse>()
 //        println("$profile")

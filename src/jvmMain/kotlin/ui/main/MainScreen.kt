@@ -17,7 +17,8 @@ fun MainScreen(viewModel: MainViewModel, onClick: (Navigation, String) -> Unit) 
     var expandedGraph by remember { mutableStateOf(false) }
     var showEdgeInfo by remember { mutableStateOf(true) }
     var showNodeInfo by remember { mutableStateOf(true) }
-    var sliderPosition by remember { mutableStateOf(0f) }
+    var edgeWidthSliderPosition by remember { mutableStateOf(0f) }
+    var edgeFilterSliderPosition by remember { mutableStateOf(0f) }
 
     val profiles by viewModel.profiles.collectAsState()
     val graphState by viewModel.graphState.collectAsState()
@@ -36,8 +37,10 @@ fun MainScreen(viewModel: MainViewModel, onClick: (Navigation, String) -> Unit) 
             { showEdgeInfo = it },
             showNodeInfo,
             { showNodeInfo = it },
-            sliderPosition,
-            { sliderPosition = it },
+            edgeWidthSliderPosition,
+            { edgeWidthSliderPosition = it },
+            edgeFilterSliderPosition,
+            { edgeFilterSliderPosition = it },
             profiles,
             graphState,
             isChangingDate,
@@ -45,7 +48,7 @@ fun MainScreen(viewModel: MainViewModel, onClick: (Navigation, String) -> Unit) 
         ) { profiles, graphSelection ->
             viewModel.buildGraph(GraphRequest(profiles, graphSelection))
         }
-        GraphComponent(showEdgeInfo, showNodeInfo, sliderPosition, profiles, graphState) {
+        GraphComponent(showEdgeInfo, showNodeInfo, edgeWidthSliderPosition, edgeFilterSliderPosition, profiles, graphState) {
             viewModel.onDestroy(); onClick(Navigation.Detail, it)
         }
     }
