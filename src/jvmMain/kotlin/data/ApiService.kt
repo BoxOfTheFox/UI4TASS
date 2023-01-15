@@ -22,6 +22,8 @@ interface ApiService {
 
     suspend fun getComments(profileName: String): CommentsResponse
 
+    suspend fun getTimeRange(startDate: String, endDate: String)
+
     companion object {
         fun create(): ApiService {
             return ApiServiceImpl(
@@ -37,9 +39,9 @@ interface ApiService {
                     }
                     // Timeout
                     install(HttpTimeout) {
-                        requestTimeoutMillis = 15000L
-                        connectTimeoutMillis = 15000L
-                        socketTimeoutMillis = 15000L
+                        requestTimeoutMillis = 100000L
+                        connectTimeoutMillis = 100000L
+                        socketTimeoutMillis = 100000L
                     }
                 }
             )

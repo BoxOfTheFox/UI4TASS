@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import ui.main.GraphOptionsEnum
 
 class ApiServiceImpl(
     private val client: HttpClient
@@ -21,7 +22,7 @@ class ApiServiceImpl(
     override val profiles: Flow<Profiles> = flow { emit(client.get(ApiRoutes.PROFILES).body()) }
 
     override suspend fun getGraph(graphRequest: GraphRequest): GraphResponse = withContext(Dispatchers.IO) {
-        client.get(ApiRoutes.GRAPH) {
+        client.post(graphRequest.graphType.toApiRoute()) {
             contentType(ContentType.Application.Json)
             setBody(graphRequest)
         }.body()
@@ -38,6 +39,16 @@ class ApiServiceImpl(
 
     override suspend fun getComments(profileName: String): CommentsResponse =
         client.get("${ApiRoutes.COMMENTS}/$profileName").body()
+
+    override suspend fun getTimeRange(startDate: String, endDate: String) {
+        client.get("${ApiRoutes.GET_TIME_RANGE}/$startDate/$endDate")
+    }
+
+    private fun GraphOptionsEnum.toApiRoute() = when(this) {
+        GraphOptionsEnum.Instagram -> ApiRoutes.Graph.INSTA
+        GraphOptionsEnum.Sofifa -> ApiRoutes.Graph.SOFIFA
+        GraphOptionsEnum.Wszystko -> ApiRoutes.Graph.GRAPH
+    }
 }
 
 fun main() {
@@ -51,13 +62,23 @@ fun main() {
             }
         }
 
-//        val response: HttpResponse = client.get("http://127.0.0.1:5000/profile/H. Kane") {
-//            contentType(ContentType.Application.Json)
-//            setBody(GraphRequest(listOf(Pair("harrykane", "H. Kane"),Pair("trentarnold66", "T. Alexander-Arnold"),Pair("sterling7", "R. Sterling"))))
-//        }
+        val response: HttpResponse = client.post("http://127.0.0.1:5000/graph/instagram") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                GraphRequest(
+                    listOf(
+                        Pair("H. Kane", "harrykane"),
+                        Pair("T. Alexander-Arnold", "trentarnold66"),
+                        Pair("R. Sterling", "sterling7")
+                    ),
+                    GraphOptionsEnum.Sofifa
+                )
+            )
+        }
 //        println(response.body<GraphResponse>())
+        println(response.bodyAsText())
 
-        val profile = client.get("${ApiRoutes.JACCARD}").body<JaccardResponse>()
-        println("$profile")
+//        val profile = client.get("${ApiRoutes.GRAPH}").body<GraphResponse>()
+//        println("$profile")
     }
 }

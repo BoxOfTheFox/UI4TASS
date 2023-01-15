@@ -1,22 +1,32 @@
 package data
 
 import kotlinx.serialization.Serializable
-
-@Serializable
-data class EdgePojo(
-    val weight: Float,
-    val nodes: List<String>
-)
+import ui.main.GraphOptionsEnum
 
 @Serializable
 data class GraphRequest(
-    val profiles: List<Pair<String, String>>
+    val profiles: List<Pair<String, String>>,
+    val graphType: GraphOptionsEnum
 )
 
 @Serializable
 data class GraphResponse(
-    val nodes: Map<String, List<Float>>,
-    val edges: List<EdgePojo>
+    val edges: Edges,
+    val nodes: Nodes
+)
+
+@Serializable
+data class Edges(
+    val common: List<List<String>>? = null,
+    val instagram_only: List<List<String>>? = null,
+    val sofifa_only: List<List<String>>? = null
+)
+
+@Serializable
+data class Nodes(
+    val common: List<Map<String,List<Float>>>? = null,
+    val instagram_only: List<Map<String,List<Float>>>? = null,
+    val sofifa_only: List<Map<String,List<Float>>>? = null
 )
 
 @Serializable
@@ -72,7 +82,7 @@ data class Profile(
     val Long_shots: Int,
     val Aggressiveness: Int,
     val Interceptions: Int,
-    val Placement1: Int,
+    val Placement_mental: Int,
     val Vision: Int,
     val Penalty: Int,
     val Calmness: Int,
@@ -82,7 +92,7 @@ data class Profile(
     val Diving: Int,
     val Hand_game: Int,
     val Foot_game: Int,
-    val Placement2: Int,
+    val Placement_GK: Int,
     val Reflexes: Int,
     val Preferred_foot_Left: Int,
     val Preferred_foot_Right: Int,

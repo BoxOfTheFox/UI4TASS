@@ -17,11 +17,20 @@ class MainViewModel(private val api: ApiService) {
         initialValue = listOf()
     )
 
+    private val _changingDate = MutableStateFlow(false)
+    val changingDate = _changingDate.asStateFlow()
+
     private val _graphState = MutableStateFlow<GraphState?>(null)
     val graphState = _graphState.asStateFlow()
     fun buildGraph(graphRequest: GraphRequest) = scope.launch {
         _graphState.emit(null)
-        _graphState.emit(api.getGraph(graphRequest).toGraphState())
+        _graphState.emit(api.getGraph(graphRequest).toGraphState(graphRequest.graphType))
+    }
+
+    fun setNewDate(startDate: String, endDate: String) = scope.launch {
+        _changingDate.emit(true)
+        api.getTimeRange(startDate, endDate)
+        _changingDate.emit(false)
     }
 
     fun onDestroy() {

@@ -14,12 +14,14 @@ import data.GraphRequest
 fun MainScreen(viewModel: MainViewModel, onClick: (Navigation, String) -> Unit) {
     val focusManager = LocalFocusManager.current
     var expanded by remember { mutableStateOf(false) }
+    var expandedGraph by remember { mutableStateOf(false) }
     var showEdgeInfo by remember { mutableStateOf(true) }
     var showNodeInfo by remember { mutableStateOf(true) }
     var sliderPosition by remember { mutableStateOf(0f) }
 
     val profiles by viewModel.profiles.collectAsState()
     val graphState by viewModel.graphState.collectAsState()
+    val isChangingDate by viewModel.changingDate.collectAsState()
 
     Box(modifier = Modifier.onClick {
         expanded = false
@@ -28,6 +30,8 @@ fun MainScreen(viewModel: MainViewModel, onClick: (Navigation, String) -> Unit) 
         SearchComponent(
             expanded,
             { expanded = it },
+            expandedGraph,
+            { expandedGraph = it },
             showEdgeInfo,
             { showEdgeInfo = it },
             showNodeInfo,
@@ -36,7 +40,11 @@ fun MainScreen(viewModel: MainViewModel, onClick: (Navigation, String) -> Unit) 
             { sliderPosition = it },
             profiles,
             graphState,
-        ) { viewModel.buildGraph(GraphRequest(it)) }
+            isChangingDate,
+            viewModel::setNewDate
+        ) { profiles, graphSelection ->
+            viewModel.buildGraph(GraphRequest(profiles, graphSelection))
+        }
         GraphComponent(showEdgeInfo, showNodeInfo, sliderPosition, profiles, graphState) {
             viewModel.onDestroy(); onClick(Navigation.Detail, it)
         }
